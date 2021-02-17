@@ -25,7 +25,6 @@ const SIGNALING_SERVER_URL = 'ws://127.0.0.1:8003';
       // WebRTC methods
       let peers = {}
       let localStream;
-      let remoteStreamElement = document.querySelector('#remoteStream');
   
       let getLocalStream = () => {
           navigator.mediaDevices.getUserMedia({audio: true, video: true})
