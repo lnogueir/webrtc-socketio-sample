@@ -119,12 +119,12 @@ let handleSignalingData = (data) => {
             break;
         case 'candidate':
             if (sid in peers) {
-            peers[sid].addIceCandidate(new RTCIceCandidate(data.candidate));
+                peers[sid].addIceCandidate(new RTCIceCandidate(data.candidate));
             } else {
-            if (!(sid in pendingCandidates)) {
-                pendingCandidates[sid] = [];
-            }
-            pendingCandidates[sid].push(data.candidate)
+                if (!(sid in pendingCandidates)) {
+                    pendingCandidates[sid] = [];
+                }
+                pendingCandidates[sid].push(data.candidate)
             }
             break;
     }
