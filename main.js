@@ -16,6 +16,7 @@ const SIGNALING_SERVER_URL = 'ws://127.0.0.1:8003';
           // Connection with signaling server is ready, and so is local stream
           peers[msg.sid] = createPeerConnection();
           sendOffer(msg.sid);
+          addPendingCandidates(msg.sid);
       });
   
       let sendData = (data) => {
@@ -24,6 +25,7 @@ const SIGNALING_SERVER_URL = 'ws://127.0.0.1:8003';
   
       // WebRTC methods
       let peers = {}
+      let pendingCandidates = {}
       let localStream;
   
       let getLocalStream = () => {
@@ -71,7 +73,7 @@ const SIGNALING_SERVER_URL = 'ws://127.0.0.1:8003';
       let setAndSendLocalDescription = (sid, sessionDescription) => {
           peers[sid].setLocalDescription(sessionDescription);
           console.log('Local description set');
-          sendData({sid, ...sessionDescription});
+          sendData({sid, type: sessionDescription.type, sdp: sessionDescription.sdp});
       };
   
       let onIceCandidate = (event) => {
@@ -91,9 +93,18 @@ const SIGNALING_SERVER_URL = 'ws://127.0.0.1:8003';
           newRemoteStreamElem.srcObject = event.stream;
           document.querySelector('#remoteStreams').appendChild(newRemoteStreamElem);
       };
+
+      let addPendingCandidates = (sid) => {
+        if (sid in pendingCandidates) {
+            pendingCandidates[sid].forEach(candidate => {
+                peers[sid].addIceCandidate(new RTCIceCandidate(candidate))
+            });
+          }
+      }
   
       let handleSignalingData = (data) => {
           // let msg = JSON.parse(data);
+          console.log(data)
           const sid = data.sid;
           delete data.sid;
           switch (data.type) {
@@ -101,12 +112,20 @@ const SIGNALING_SERVER_URL = 'ws://127.0.0.1:8003';
                   peers[sid] = createPeerConnection();
                   peers[sid].setRemoteDescription(new RTCSessionDescription(data));
                   sendAnswer(sid);
+                  addPendingCandidates(sid);
                   break;
               case 'answer':
                   peers[sid].setRemoteDescription(new RTCSessionDescription(data));
                   break;
               case 'candidate':
-                  peers[sid].addIceCandidate(new RTCIceCandidate(data.candidate));
+                  if (sid in peers) {
+                    peers[sid].addIceCandidate(new RTCIceCandidate(data.candidate));
+                  } else {
+                    if (!(sid in pendingCandidates)) {
+                        pendingCandidates[sid] = [];
+                    }
+                    pendingCandidates[sid].push(data.candidate)
+                  }
                   break;
           }
       };
