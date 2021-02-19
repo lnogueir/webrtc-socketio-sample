@@ -1,4 +1,4 @@
-# webrtc-socketio
+# webrtc-socketio-sample-code
 
 This is a simple WebRTC client and signalling server supporting multiple peers made to help beginners in the realm of webrtc get familiar with the workflow.
 
